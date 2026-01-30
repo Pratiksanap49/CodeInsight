@@ -1,5 +1,7 @@
 import { parse } from "@babel/parser";
 import traverse from "@babel/traverse";
+const { default: babelTraverse } = traverse;
+
 
 export function extractFeatures(code) {
   const features = {
@@ -41,7 +43,7 @@ export function extractFeatures(code) {
 
   let currentDepth = 0;
 
-  traverse(ast, {
+  babelTraverse(ast, {
     enter() {
       currentDepth++;
       features.nestedDepth = Math.max(features.nestedDepth, currentDepth);
