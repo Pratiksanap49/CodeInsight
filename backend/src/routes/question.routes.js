@@ -4,13 +4,19 @@ import { authenticate } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// List questions (no tests)
+/**
+ * GET /api/questions
+ * Purpose: list all diagnostic questions (summary only)
+ */
 router.get("/", authenticate, async (req, res) => {
   const questions = await Question.find().select("-tests");
   res.json(questions);
 });
 
-// Single question
+/**
+ * GET /api/questions/:id
+ * Purpose: fetch one question for an attempt
+ */
 router.get("/:id", authenticate, async (req, res) => {
   const question = await Question.findById(req.params.id);
 
