@@ -5,28 +5,59 @@ export async function getUserAnalytics(userId) {
     createdAt: 1
   });
 
-  const misconceptionFrequency = {};
-  const attemptsPerQuestion = {};
-  const misconceptionsOverTime = [];
-
-  for (const sub of submissions) {
-    // Attempts per question
-    attemptsPerQuestion[sub.questionId] =
-      Math.max(attemptsPerQuestion[sub.questionId] || 0, sub.attemptNumber);
-
-    // Misconception frequency
-    sub.detectedMisconceptions.forEach(m => {
-      misconceptionFrequency[m.id] =
-        (misconceptionFrequency[m.id] || 0) + 1;
-    });
-
-    // Trend over time
-    misconceptionsOverTime.push({
-      submissionId: sub._id,
-      count: sub.detectedMisconceptions.length,
-      createdAt: sub.createdAt
-    });
+  /* -----------------------------
+     Empty state (guaranteed shape)
+  ------------------------------ */
+  if (submissions.length === 0) {
+    return {
+      misconceptionFrequency: [],
+      attemptsPerQuestion: [],
+      misconceptionsOverTime: []
+    };
   }
+
+  /* -----------------------------
+     Misconception frequency
+  ------------------------------ */
+  const misconceptionMap = {};
+
+  submissions.forEach(sub => {
+    sub.detectedMisconceptions.forEach(m => {
+      misconceptionMap[m.id] =
+        (misconceptionMap[m.id] || 0) + 1;
+    });
+  });
+
+  const misconceptionFrequency = Object.entries(
+    misconceptionMap
+  ).map(([id, count]) => ({ id, count }));
+
+  /* -----------------------------
+     Attempts per question
+  ------------------------------ */
+  const attemptsMap = {};
+
+  submissions.forEach(sub => {
+    attemptsMap[sub.questionId] = Math.max(
+      attemptsMap[sub.questionId] || 0,
+      sub.attemptNumber
+    );
+  });
+
+  const attemptsPerQuestion = Object.entries(
+    attemptsMap
+  ).map(([questionId, attempts]) => ({
+    questionId,
+    attempts
+  }));
+
+  /* -----------------------------
+     Misconceptions over time
+  ------------------------------ */
+  const misconceptionsOverTime = submissions.map(sub => ({
+    timestamp: sub.createdAt,
+    count: sub.detectedMisconceptions.length
+  }));
 
   return {
     misconceptionFrequency,

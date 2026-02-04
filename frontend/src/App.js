@@ -10,7 +10,6 @@ function App() {
   if (view === "analytics") {
     return (
       <div>
-        return <h1 className="text-4xl text-blue-600">Tailwind Works</h1>;
         <button onClick={() => setView("questions")}>Back</button>
         <AnalyticsDashboard />
       </div>
