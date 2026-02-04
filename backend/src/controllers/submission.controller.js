@@ -52,9 +52,29 @@ export async function submitCode(req, res, next) {
     const attemptNumber = previousSubmissions.length + 1;
 
     /* -----------------------------
-       5. Feature extraction
+       4.1 Rate-limit protection
     ------------------------------ */
-    const features = extractFeatures(code);
+    const lastSubmission = previousSubmissions.at(-1);
+    if (lastSubmission) {
+      const diff =
+        Date.now() - new Date(lastSubmission.createdAt).getTime();
+
+      if (diff < 3000) {
+        const err = new Error("Submission too frequent");
+        err.status = 429;
+        throw err;
+      }
+    }
+
+    /* -----------------------------
+       5. Feature extraction (safe)
+    ------------------------------ */
+    let features;
+    try {
+      features = extractFeatures(code);
+    } catch {
+      features = {};
+    }
 
     /* -----------------------------
        6. Misconception detection
@@ -64,8 +84,19 @@ export async function submitCode(req, res, next) {
       previousSubmissions
     });
 
+    /* -----------------------------
+       6.1 Outcome stability
+    ------------------------------ */
+    const hasSolvedBefore = previousSubmissions.some(
+      s => s.outcome === "solved"
+    );
+
     const outcome =
-      detectedMisconceptions.length === 0 ? "solved" : "abandoned";
+      hasSolvedBefore
+        ? "solved"
+        : detectedMisconceptions.length === 0
+          ? "solved"
+          : "abandoned";
 
     /* -----------------------------
        7. Persist submission
@@ -96,6 +127,6 @@ export async function submitCode(req, res, next) {
       detectedMisconceptions
     });
   } catch (err) {
-    next(err); // central error handler
+    next(err);
   }
 }

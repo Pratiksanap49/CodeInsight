@@ -1,4 +1,7 @@
-import Submission from "../../models/Submission.model.js";
+import { getUserAnalytics } from "../analytics.service.js";
+import Submission from "../../../models/Submission.model.js";
+
+jest.mock("../../../models/Submission.model.js");
 
 export async function getUserAnalytics(userId) {
   const submissions = await Submission.find({ userId }).sort({
