@@ -2,6 +2,7 @@ import Submission from "../models/Submission.model.js";
 import Question from "../models/Question.model.js";
 import { extractFeatures } from "../services/featureExtractor.js";
 import { detectMisconceptions } from "../services/misconceptionEngine/index.js";
+import { getConfidence } from "../services/ml.client.js";
 
 export async function submitCode(req, res, next) {
   try {
@@ -77,7 +78,7 @@ export async function submitCode(req, res, next) {
     }
 
     /* -----------------------------
-       6. Misconception detection
+       6. Rule-based detection
     ------------------------------ */
     const detectedMisconceptions = detectMisconceptions(features, {
       attemptNumber,
@@ -99,7 +100,24 @@ export async function submitCode(req, res, next) {
           : "abandoned";
 
     /* -----------------------------
-       7. Persist submission
+       7. Optional ML confidence
+    ------------------------------ */
+    let confidenceData = null;
+
+    confidenceData = await getConfidence(
+      { ...features, attemptNumber },
+      detectedMisconceptions
+    );
+
+    const enrichedMisconceptions = detectedMisconceptions.map(m => {
+      const match = confidenceData?.find(c => c.id === m.id);
+      return match
+        ? { ...m, confidence: match.confidence }
+        : m;
+    });
+
+    /* -----------------------------
+       8. Persist submission
     ------------------------------ */
     const submission = await Submission.create({
       userId,
@@ -113,18 +131,18 @@ export async function submitCode(req, res, next) {
         testFailures: []
       },
       features,
-      detectedMisconceptions,
+      detectedMisconceptions: enrichedMisconceptions,
       outcome
     });
 
     /* -----------------------------
-       8. Stable response shape
+       9. Stable response
     ------------------------------ */
     return res.status(201).json({
       submissionId: submission._id,
       attemptNumber,
       outcome,
-      detectedMisconceptions
+      detectedMisconceptions: enrichedMisconceptions
     });
   } catch (err) {
     next(err);
