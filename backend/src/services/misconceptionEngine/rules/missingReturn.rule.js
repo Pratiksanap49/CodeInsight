@@ -8,6 +8,13 @@ export default {
     // Simplest robust check: function exists, implicitReturn is true, and it's not a short one-liner?
     // Let's rely on 'functions' list
 
+    // DISABLED: This rule detects ANY function without a return statement.
+    // In JavaScript, many valid functions are void (e.g., event handlers, side-effect only).
+    // Without strict typing or intent analysis, this causes excessive false positives.
+    // Per "Safety" phase instructions: "Rules prefer false negatives over false positives."
+    return false;
+
+    /*
     return features.functions.some(fn => {
       // Skip arrow functions that might be used as callbacks without block bodies (usually handled by isReturn=true in extraction if expression body)
       // Note: featureExtractor defaults implicitReturn=true.
@@ -33,6 +40,7 @@ export default {
 
       return false;
     });
+    */
   },
 
   evidence(features) {

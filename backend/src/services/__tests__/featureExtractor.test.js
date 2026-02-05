@@ -5,13 +5,13 @@ describe("featureExtractor", () => {
     const code = "function f() {}";
     const features = extractFeatures(code);
 
-    expect(features.hasReturn).toBe(false);
+    expect(features.functions[0].hasReturn).toBe(false);
   });
 
   test("detects return statement", () => {
     const code = "function f() { return 1; }";
     const features = extractFeatures(code);
 
-    expect(features.hasReturn).toBe(true);
+    expect(features.functions[0].hasReturn).toBe(true);
   });
 });

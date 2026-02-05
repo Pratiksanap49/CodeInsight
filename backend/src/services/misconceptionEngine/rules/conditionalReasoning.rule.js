@@ -6,9 +6,9 @@ export default {
       // confusing assignment in condition: if (a = b)
       if (cond.isAssignment) return true;
 
-      // redundancy: if (a == true) or if (a == false)
-      // strict or loose equality
-      if (/==\s*(true|false)/.test(cond.testAsString)) return true;
+      // REMOVED: Check for == true / == false. 
+      // This is a stylistic issue, not strictly a "misconception" requiring diagnosis in this context.
+      // It flags valid, working code.
 
       return false;
     });

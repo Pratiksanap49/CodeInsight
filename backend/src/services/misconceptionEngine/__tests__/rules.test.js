@@ -13,7 +13,8 @@ describe("Misconception Rules", () => {
     test("Missing Return", () => {
         const code = "function add(a, b) { let c = a + b; }";
         const features = extractFeatures(code);
-        expect(missingReturn.detect(features)).toBe(true);
+        // DISABLED Rule: should return false now
+        expect(missingReturn.detect(features)).toBe(false);
 
         const codeValid = "function add(a, b) { return a + b; }";
         const featuresValid = extractFeatures(codeValid);
@@ -37,7 +38,8 @@ describe("Misconception Rules", () => {
 
         const code2 = "if (x == true) {}";
         const features2 = extractFeatures(code2);
-        expect(conditionalReasoning.detect(features2)).toBe(true);
+        // REMOVED Stylistic check: should return false now
+        expect(conditionalReasoning.detect(features2)).toBe(false);
     });
 
     test("Array Method Misuse", () => {
@@ -74,7 +76,8 @@ describe("Misconception Rules", () => {
     test("Execution Order", () => {
         const code = "for(let i=0; i<3; i++) { function inner() {} }";
         const features = extractFeatures(code);
-        expect(executionOrder.detect(features)).toBe(true);
+        // DISABLED Rule: should return false now
+        expect(executionOrder.detect(features)).toBe(false);
     });
 
     test("Trial and Error", () => {
