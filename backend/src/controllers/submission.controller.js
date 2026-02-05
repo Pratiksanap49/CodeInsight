@@ -125,7 +125,7 @@ export async function submitCode(req, res, next) {
       attemptNumber,
       code,
       timeSpent,
-      errors: {
+      executionErrors: {
         syntax: [],
         runtime: [],
         testFailures: []

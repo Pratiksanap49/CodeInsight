@@ -17,8 +17,8 @@ app.use(express.json());
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/analytics", analyticsRoutes);
-app.use(errorHandler);
 app.use("/api/auth", authRoutes);
+app.use(errorHandler);
 
 
 

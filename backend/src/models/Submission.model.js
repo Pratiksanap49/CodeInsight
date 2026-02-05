@@ -24,7 +24,7 @@ const SubmissionSchema = new mongoose.Schema(
       type: Number, // ms
       required: true
     },
-    errors: {
+    executionErrors: {
       syntax: [String],
       runtime: [String],
       testFailures: [String]
