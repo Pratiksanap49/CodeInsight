@@ -51,6 +51,7 @@ export default function AnalyticsDashboard() {
           <tr>
             <th>Time</th>
             <th>Misconceptions Count</th>
+            <th>Avg Confidence</th>
           </tr>
         </thead>
         <tbody>
@@ -58,6 +59,7 @@ export default function AnalyticsDashboard() {
             <tr key={idx}>
               <td>{new Date(row.createdAt).toLocaleString()}</td>
               <td>{row.count}</td>
+              <td>{row.avgConfidence}</td>
             </tr>
           ))}
         </tbody>

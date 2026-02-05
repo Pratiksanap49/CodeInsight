@@ -29,9 +29,8 @@ export async function getUserAnalytics(userId) {
     });
   });
 
-  const misconceptionFrequency = Object.entries(
-    misconceptionMap
-  ).map(([id, count]) => ({ id, count }));
+  // Return map directly for frontend compatibility (Object.entries)
+  const misconceptionFrequency = misconceptionMap;
 
   /* -----------------------------
      Attempts per question
@@ -45,20 +44,27 @@ export async function getUserAnalytics(userId) {
     );
   });
 
-  const attemptsPerQuestion = Object.entries(
-    attemptsMap
-  ).map(([questionId, attempts]) => ({
-    questionId,
-    attempts
-  }));
+  const attemptsPerQuestion = attemptsMap;
 
   /* -----------------------------
      Misconceptions over time
   ------------------------------ */
-  const misconceptionsOverTime = submissions.map(sub => ({
-    timestamp: sub.createdAt,
-    count: sub.detectedMisconceptions.length
-  }));
+  const misconceptionsOverTime = submissions.map(sub => {
+    const totalConf = sub.detectedMisconceptions.reduce(
+      (acc, m) => acc + (m.confidence || 0),
+      0
+    );
+    const avgConf =
+      sub.detectedMisconceptions.length > 0
+        ? totalConf / sub.detectedMisconceptions.length
+        : 0;
+
+    return {
+      createdAt: sub.createdAt,
+      count: sub.detectedMisconceptions.length,
+      avgConfidence: parseFloat(avgConf.toFixed(2))
+    };
+  });
 
   return {
     misconceptionFrequency,

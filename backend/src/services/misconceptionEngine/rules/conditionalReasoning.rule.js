@@ -2,10 +2,19 @@ export default {
   id: "conditional_reasoning",
 
   detect(features) {
-    return features.ifCount > 0 && features.elseCount === 0;
+    return features.conditionals.some(cond => {
+      // confusing assignment in condition: if (a = b)
+      if (cond.isAssignment) return true;
+
+      // redundancy: if (a == true) or if (a == false)
+      // strict or loose equality
+      if (/==\s*(true|false)/.test(cond.testAsString)) return true;
+
+      return false;
+    });
   },
 
-  evidence() {
-    return "Conditional logic without else branch may miss cases.";
+  evidence(features) {
+    return "Conditional expression contains assignment (=) or redundant boolean check.";
   }
 };
