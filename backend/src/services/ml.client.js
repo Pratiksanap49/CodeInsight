@@ -1,8 +1,8 @@
-import fetch from "node-fetch";
-
-const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "http://localhost:8001";
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL;
 
 export async function getConfidence(features, misconceptions) {
+  if (!ML_SERVICE_URL) return null;
+
   try {
     const res = await fetch(`${ML_SERVICE_URL}/confidence`, {
       method: "POST",
@@ -10,8 +10,7 @@ export async function getConfidence(features, misconceptions) {
       body: JSON.stringify({
         features,
         misconceptions: misconceptions.map(m => ({ id: m.id }))
-      }),
-      timeout: 2000
+      })
     });
 
     if (!res.ok) return null;
