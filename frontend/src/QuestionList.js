@@ -17,16 +17,18 @@ export default function QuestionList({ onSelect }) {
 
   return (
     <div>
-      <h2>Questions</h2>
-      <ul>
+      <h2 style={{ marginBottom: "1.5rem" }}>Select a Diagnostic Module</h2>
+      <div className="question-list">
         {questions.map(q => (
-          <li key={q._id}>
+          <div key={q._id} className="question-card">
+            <h3 style={{ marginTop: 0 }}>{q.title}</h3>
+            <p style={{ color: 'var(--text-secondary)' }}>{q.prompt}</p>
             <button onClick={() => onSelect(q)}>
-              {q.prompt}
+              Start Diagnostic
             </button>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

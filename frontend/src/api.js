@@ -1,7 +1,37 @@
 const BASE_URL = "http://localhost:5000/api";
 
+function getHeaders() {
+  const token = localStorage.getItem("token");
+  return {
+    "Content-Type": "application/json",
+    ...(token && { Authorization: `Bearer ${token}` })
+  };
+}
+
+export async function login(email, password) {
+  const res = await fetch(`${BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  if (!res.ok) throw new Error("Login failed");
+  return res.json();
+}
+
+export async function register(email, password) {
+  const res = await fetch(`${BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+  if (!res.ok) throw new Error("Registration failed");
+  return res.json();
+}
+
 export async function getQuestions() {
-  const res = await fetch(`${BASE_URL}/questions`);
+  const res = await fetch(`${BASE_URL}/questions`, {
+    headers: getHeaders()
+  });
   if (!res.ok) {
     throw new Error("Failed to fetch questions");
   }
@@ -11,7 +41,7 @@ export async function getQuestions() {
 export async function submitCode(payload) {
   const res = await fetch(`${BASE_URL}/submissions`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getHeaders(),
     body: JSON.stringify(payload)
   });
 
@@ -23,10 +53,11 @@ export async function submitCode(payload) {
 }
 
 export async function getAnalytics() {
-  const res = await fetch("http://localhost:5000/api/analytics");
+  const res = await fetch("http://localhost:5000/api/analytics", {
+    headers: getHeaders()
+  });
   if (!res.ok) {
     throw new Error("Failed to fetch analytics");
   }
   return res.json();
 }
-

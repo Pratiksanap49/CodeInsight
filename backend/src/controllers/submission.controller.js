@@ -142,7 +142,8 @@ export async function submitCode(req, res, next) {
       submissionId: submission._id,
       attemptNumber,
       outcome,
-      detectedMisconceptions: enrichedMisconceptions
+      detectedMisconceptions: enrichedMisconceptions,
+      executionErrors: submission.executionErrors
     });
   } catch (err) {
     next(err);
