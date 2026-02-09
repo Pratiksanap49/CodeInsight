@@ -128,15 +128,16 @@ export default function QuestionAttempt() {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", flex: 1 }}>
         {/* Left Column: Prompt & Editor */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <div className="glass-card">
-            <h3 style={{ marginTop: 0, color: "var(--accent-primary)" }}>Problem Description</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem", height: "100%" }}>
+          <div className="glass-card" style={{ maxHeight: "200px", overflowY: "auto", flexShrink: 0 }}>
+            <h3 style={{ marginTop: 0, color: "var(--accent-primary)", fontSize: "1.1rem" }}>Problem Description</h3>
             <p style={{ lineHeight: 1.6, color: "var(--text-secondary)" }}>{question.prompt}</p>
           </div>
 
-          <div className="glass-card" style={{ flex: 1, display: "flex", flexDirection: "column", padding: 0, overflow: "hidden" }}>
-            <div style={{ padding: "0.5rem 1rem", borderBottom: "1px solid var(--glass-border)", background: "rgba(0,0,0,0.3)", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-              JavaScript Editor
+          <div className="glass-card" style={{ flex: 1, display: "flex", flexDirection: "column", padding: 0, overflow: "hidden", minHeight: "400px" }}>
+            <div style={{ padding: "0.5rem 1rem", borderBottom: "1px solid var(--glass-border)", background: "rgba(0,0,0,0.3)", fontSize: "0.9rem", color: "var(--text-secondary)", display: "flex", justifyContent: "space-between" }}>
+              <span>JavaScript Editor</span>
+              <span style={{ fontSize: "0.8rem", opacity: 0.7 }}>main.js</span>
             </div>
             <textarea
               style={{
@@ -144,12 +145,12 @@ export default function QuestionAttempt() {
                 background: "transparent",
                 border: "none",
                 color: "#e2e8f0",
-                fontFamily: "monospace",
-                fontSize: "1rem",
-                padding: "1rem",
+                fontFamily: "'Fira Code', 'Consolas', monospace",
+                fontSize: "1.1rem",
+                padding: "1.5rem",
                 resize: "none",
                 outline: "none",
-                lineHeight: 1.5
+                lineHeight: 1.6
               }}
               value={code}
               onChange={e => setCode(e.target.value)}
@@ -157,8 +158,8 @@ export default function QuestionAttempt() {
             />
           </div>
 
-          <button className="btn-primary" onClick={handleSubmit} disabled={loading} style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem" }}>
-            {loading ? <div className="loading-spinner"></div> : "Run & Diagnose"}
+          <button className="btn-primary" onClick={handleSubmit} disabled={loading} style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem", padding: "1rem" }}>
+            {loading ? <div className="loading-spinner"></div> : "▶ Run & Diagnose"}
           </button>
         </div>
 
