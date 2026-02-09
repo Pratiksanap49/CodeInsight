@@ -3,6 +3,7 @@ import Question from "../models/Question.model.js";
 import { extractFeatures } from "../services/featureExtractor.js";
 import { detectMisconceptions } from "../services/misconceptionEngine/index.js";
 import { getConfidence } from "../services/ml.client.js";
+import { runTests } from "../utils/testRunner.js";
 
 export async function submitCode(req, res, next) {
   try {
@@ -78,29 +79,44 @@ export async function submitCode(req, res, next) {
     }
 
     /* -----------------------------
-       6. Rule-based detection
+       6. Test Execution (NEW)
     ------------------------------ */
-    const detectedMisconceptions = detectMisconceptions(features, {
+    // Helper to format tests for VM if needed, or pass array directly
+    // Assuming Question.tests is array of strings executable in VM
+    // We need to fetch tests from Question model (Wait, we already fetched question on line 38)
+
+    // Import runTests at top of file (I will handle import in another block or assume it's available? No, I must add import)
+    // Actually, I can use dynamic import or just assume I will add it. I will add import in a separate block.
+    // For now, let's write the logic using runTests.
+
+    const testResults = await runTests(code, question.tests || []);
+
+    /* -----------------------------
+       7. Rule-based detection
+    ------------------------------ */
+    const detectionContext = {
       attemptNumber,
-      previousSubmissions
-    });
+      previousSubmissions,
+      testResults // Pass test results to rules
+    };
+
+    const detectedMisconceptions = detectMisconceptions(features, detectionContext);
 
     /* -----------------------------
-       6.1 Outcome stability
+       8. Outcome determination
     ------------------------------ */
-    const hasSolvedBefore = previousSubmissions.some(
-      s => s.outcome === "solved"
-    );
+    const hasSolvedBefore = previousSubmissions.some(s => s.outcome === "solved");
 
-    const outcome =
-      hasSolvedBefore
-        ? "solved"
-        : detectedMisconceptions.length === 0
-          ? "solved"
-          : "abandoned";
+    // Solved ONLY if tests passed
+    const isSolvedNow = testResults.passed;
+
+    const outcome = hasSolvedBefore ? "solved" : (isSolvedNow ? "solved" : "attempted");
+    // "abandoned" is usually determined by session timeout, here we just say "attempted" or "failed"?
+    // The prompt says "Final outcome (solved / unsolved)".
+    // So "attempted" = "unsolved".
 
     /* -----------------------------
-       7. Optional ML confidence
+       9. Optional ML confidence
     ------------------------------ */
     let confidenceData = null;
 
@@ -117,7 +133,7 @@ export async function submitCode(req, res, next) {
     });
 
     /* -----------------------------
-       8. Persist submission
+       10. Persist submission
     ------------------------------ */
     const submission = await Submission.create({
       userId,
@@ -126,9 +142,9 @@ export async function submitCode(req, res, next) {
       code,
       timeSpent,
       executionErrors: {
-        syntax: [],
-        runtime: [],
-        testFailures: []
+        syntax: testResults.syntax,
+        runtime: testResults.runtime,
+        testFailures: testResults.testFailures
       },
       features,
       detectedMisconceptions: enrichedMisconceptions,

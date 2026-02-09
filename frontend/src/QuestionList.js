@@ -1,33 +1,98 @@
-import { useEffect, useState } from "react";
-import { getQuestions } from "./api";
+import { useState, useEffect } from "react";
+// Assuming api.js is exporting getQuestions correctly. I will re-implement if needed or use existing.
+import { getQuestions } from "./api"; // Ensure api.js has getQuestions
 
 export default function QuestionList({ onSelect }) {
   const [questions, setQuestions] = useState([]);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getQuestions()
-      .then(setQuestions)
-      .catch(err => setError(err.message));
+      .then(data => {
+        setQuestions(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
   }, []);
 
-  if (error) {
-    return <div>Error: {error}</div>;
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
+        <div className="loading-spinner" style={{ width: "40px", height: "40px" }}></div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h2 style={{ marginBottom: "1.5rem" }}>Select a Diagnostic Module</h2>
-      <div className="question-list">
-        {questions.map(q => (
-          <div key={q._id} className="question-card">
-            <h3 style={{ marginTop: 0 }}>{q.title}</h3>
-            <p style={{ color: 'var(--text-secondary)' }}>{q.prompt}</p>
-            <button onClick={() => onSelect(q)}>
-              Start Diagnostic
-            </button>
-          </div>
-        ))}
+    <div className="animate-fade-in" style={{ padding: "2rem" }}>
+      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+
+        <div style={{ marginBottom: "2rem", textAlign: "center" }}>
+          <h2>Diagnostic Challenges</h2>
+          <p style={{ color: "var(--text-secondary)" }}>Select a problem to analyze your coding patterns.</p>
+        </div>
+
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+          gap: "1.5rem"
+        }}>
+          {questions.map((q, i) => (
+            <div
+              key={q._id}
+              className="glass-card"
+              style={{ cursor: "pointer", position: "relative" }}
+              onClick={() => onSelect(q)}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+                <span style={{
+                  background: "rgba(255,255,255,0.1)",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  fontSize: "0.8rem",
+                  color: "var(--text-secondary)"
+                }}>
+                  Problem #{i + 1}
+                </span>
+                {q.isSolved && (
+                  <span style={{
+                    background: "rgba(16, 185, 129, 0.2)",
+                    color: "var(--success)",
+                    padding: "4px 8px",
+                    borderRadius: "4px",
+                    fontSize: "0.8rem",
+                    fontWeight: "bold"
+                  }}>
+                    SOLVED
+                  </span>
+                )}
+              </div>
+
+              <h3 style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}>{q.title}</h3>
+              <p style={{
+                color: "var(--text-secondary)",
+                fontSize: "0.9rem",
+                marginBottom: "1.5rem",
+                display: "-webkit-box",
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden"
+              }}>
+                {q.prompt}
+              </p>
+
+              <button
+                className="btn-secondary"
+                style={{ width: "100%", textAlign: "center" }}
+              >
+                {q.isSolved ? "Review Solution" : "Start Challenge"}
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

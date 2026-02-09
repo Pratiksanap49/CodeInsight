@@ -80,7 +80,14 @@ export function extractFeatures(code) {
         hasReturn: false,
         returnCount: 0,
         implicitReturn: true,
-        insideLoop: !!path.findParent(p => p.isLoop())
+        insideLoop: !!path.findParent(p => p.isLoop()),
+        enclosingLoopKind: (() => {
+          const loopPath = path.findParent(p => p.isForStatement());
+          if (loopPath && loopPath.node.init && loopPath.node.init.type === 'VariableDeclaration') {
+            return loopPath.node.init.kind;
+          }
+          return null;
+        })()
       };
 
       // Simple traversal within function to check direct returns
@@ -132,6 +139,11 @@ export function extractFeatures(code) {
           }
         } catch (e) { }
       }
+
+      // Capture loop declaration kind (var vs let/const) for execution order rule
+      if (path.isForStatement() && path.node.init && path.node.init.type === 'VariableDeclaration') {
+        loopInfo.loopDeclKind = path.node.init.kind;
+      }
       features.loops.push(loopInfo);
     },
 
@@ -166,6 +178,7 @@ export function extractFeatures(code) {
           if (currentScope) currentScope.vars.add(decl.id.name);
           features.variableDeclarations.push({
             name: decl.id.name,
+            kind: path.node.kind, // 'var', 'let', or 'const'
             scopeDepth: currentDepth
           });
         }
