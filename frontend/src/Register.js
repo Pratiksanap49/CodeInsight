@@ -1,20 +1,22 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { register } from "./api"; // Ensure api.js exports register
 
-export default function Register({ onRegisterSuccess, onSwitchToLogin }) {
+export default function Register() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     async function handleSubmit(e) {
         e.preventDefault();
         setLoading(true);
         setError(null);
         try {
-            // Assume register returns success or throws
             await register(email, password);
-            onRegisterSuccess();
+            // Auto-login or redirect to login. Let's redirect to login for simplicity
+            navigate("/login");
         } catch (err) {
             setError("Registration failed (User may exist or weak password).");
         } finally {
@@ -63,9 +65,9 @@ export default function Register({ onRegisterSuccess, onSwitchToLogin }) {
 
                 <div style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
                     Already have an account?{" "}
-                    <button onClick={onSwitchToLogin} style={{ color: "var(--accent-primary)", background: "none", border: "none", padding: 0, textDecoration: "underline", cursor: "pointer" }}>
+                    <Link to="/login" style={{ color: "var(--accent-primary)", textDecoration: "underline" }}>
                         Login here
-                    </button>
+                    </Link>
                 </div>
             </div>
         </div>

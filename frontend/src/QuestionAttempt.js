@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+
 // We need to implement the API call logic. Assuming api.js exists and has submitCode.
 // But we need to update it to match the backend endpoint.
 const API_URL = "http://localhost:5000/api";
@@ -14,6 +16,15 @@ async function submitCodeApi(data) {
     body: JSON.stringify(data)
   });
   if (!res.ok) throw new Error("Failed to submit");
+  return res.json();
+}
+
+async function fetchQuestion(id) {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${API_URL}/questions/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Failed to fetch question");
   return res.json();
 }
 
@@ -68,11 +79,23 @@ const MISCONCEPTION_DETAILS = {
   }
 };
 
-export default function QuestionAttempt({ question, onBack }) {
-  const [code, setCode] = useState(question.starterCode || "");
+export default function QuestionAttempt() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [question, setQuestion] = useState(null);
+  const [code, setCode] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchQuestion(id)
+      .then(data => {
+        setQuestion(data);
+        setCode(data.starterCode || "");
+      })
+      .catch(err => setError(err.message));
+  }, [id]);
 
   async function handleSubmit() {
     setLoading(true);
@@ -92,10 +115,13 @@ export default function QuestionAttempt({ question, onBack }) {
     }
   }
 
+  if (error) return <div style={{ padding: "2rem", color: "var(--error)" }}>Error: {error}</div>;
+  if (!question) return <div style={{ padding: "2rem", color: "var(--text-secondary)" }}>Loading...</div>;
+
   return (
     <div className="animate-fade-in" style={{ padding: "2rem", height: "100%", display: "flex", flexDirection: "column", gap: "1rem" }}>
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <button className="btn-secondary" onClick={onBack}>← Back</button>
+        <button className="btn-secondary" onClick={() => navigate("/questions")}>← Back</button>
         <h2 style={{ margin: 0 }}>{question.title}</h2>
         <div style={{ width: "80px" }}></div>
       </header>

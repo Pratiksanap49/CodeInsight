@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { login } from "./api"; // Ensure api.js exports login
 
-export default function Login({ onLogin, onSwitchToRegister }) {
+export default function Login({ onLogin }) { // onLogin prop is still useful for updating global state
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -14,7 +16,8 @@ export default function Login({ onLogin, onSwitchToRegister }) {
         try {
             const data = await login(email, password);
             localStorage.setItem("token", data.token);
-            onLogin();
+            if (onLogin) onLogin();
+            navigate("/questions"); // Redirect to questions list
         } catch (err) {
             setError("Invalid credentials. Please try again.");
         } finally {
@@ -63,9 +66,9 @@ export default function Login({ onLogin, onSwitchToRegister }) {
 
                 <div style={{ marginTop: "1.5rem", textAlign: "center", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
                     Don't have an account?{" "}
-                    <button onClick={onSwitchToRegister} style={{ color: "var(--accent-primary)", background: "none", border: "none", padding: 0, textDecoration: "underline", cursor: "pointer" }}>
+                    <Link to="/signup" style={{ color: "var(--accent-primary)", textDecoration: "underline", cursor: "pointer" }}>
                         Register here
-                    </button>
+                    </Link>
                 </div>
             </div>
         </div>

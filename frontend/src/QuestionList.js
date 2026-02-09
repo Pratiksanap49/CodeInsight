@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-// Assuming api.js is exporting getQuestions correctly. I will re-implement if needed or use existing.
-import { getQuestions } from "./api"; // Ensure api.js has getQuestions
+import { Link } from "react-router-dom";
+import { getQuestions } from "./api";
 
-export default function QuestionList({ onSelect }) {
+export default function QuestionList() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,11 +41,17 @@ export default function QuestionList({ onSelect }) {
           gap: "1.5rem"
         }}>
           {questions.map((q, i) => (
-            <div
+            <Link
+              to={`/questions/${q._id}`}
               key={q._id}
               className="glass-card"
-              style={{ cursor: "pointer", position: "relative" }}
-              onClick={() => onSelect(q)}
+              style={{
+                cursor: "pointer",
+                position: "relative",
+                textDecoration: "none",
+                color: "inherit",
+                display: "block"
+              }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
                 <span style={{
@@ -84,13 +90,13 @@ export default function QuestionList({ onSelect }) {
                 {q.prompt}
               </p>
 
-              <button
+              <div
                 className="btn-secondary"
-                style={{ width: "100%", textAlign: "center" }}
+                style={{ width: "100%", textAlign: "center", boxSizing: "border-box" }}
               >
                 {q.isSolved ? "Review Solution" : "Start Challenge"}
-              </button>
-            </div>
+              </div>
+            </Link>
           ))}
         </div>
       </div>

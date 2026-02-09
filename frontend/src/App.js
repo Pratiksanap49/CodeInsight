@@ -1,111 +1,99 @@
 import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Link } from "react-router-dom";
 import QuestionList from "./QuestionList";
 import QuestionAttempt from "./QuestionAttempt";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 import Login from "./Login";
 import Register from "./Register";
+import Home from "./Home";
 import "./App.css";
 
-function App() {
+function AppContent() {
   const [token, setToken] = useState(localStorage.getItem("token"));
-  const [selectedQuestion, setSelectedQuestion] = useState(null);
-  const [view, setView] = useState("questions"); // questions | attempt | analytics
-  const [authView, setAuthView] = useState("login"); // login | register
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // Check if token exists on mount
     const stored = localStorage.getItem("token");
     if (stored) setToken(stored);
   }, []);
 
+  function handleLogin() {
+    setToken(localStorage.getItem("token"));
+  }
+
   function handleLogout() {
     localStorage.removeItem("token");
     setToken(null);
-    setView("questions");
-    setSelectedQuestion(null);
+    navigate("/");
   }
 
-  if (!token) {
-    return (
-      <div className="App">
-        <h1>CodeInsight</h1>
-        {authView === "login" ? (
-          <Login
-            onLogin={() => setToken(localStorage.getItem("token"))}
-            onSwitchToRegister={() => setAuthView("register")}
-          />
-        ) : (
-          <Register
-            onRegisterSuccess={() => setAuthView("login")}
-            onSwitchToLogin={() => setAuthView("login")}
-          />
-        )}
-      </div>
-    );
-  }
-
-  if (view === "analytics") {
-    return (
-      <div>
-        <header>
-          <button onClick={() => setView("questions")}>Back to Questions</button>
-          <button onClick={handleLogout} style={{ marginLeft: "10px" }}>Logout</button>
-        </header>
-        <AnalyticsDashboard />
-      </div>
-    );
-  }
-
-  if (selectedQuestion) {
-    return (
-      <div>
-        <header>
-          <button
-            onClick={() => {
-              setSelectedQuestion(null);
-              setView("questions");
-            }}
-          >
-            Back
-          </button>
-          <button onClick={handleLogout} style={{ marginLeft: "10px" }}>Logout</button>
-        </header>
-
-        <QuestionAttempt question={selectedQuestion} />
-      </div>
-    );
-  }
+  // Header Logic
+  const hideHeaderRoutes = ["/login", "/signup"];
+  const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
 
   return (
-    <div>
-      <header className="glass-panel" style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: "2rem",
-        padding: "1rem 2rem",
-        borderRadius: "16px"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontSize: "1.5rem" }}>🧠</span>
-          <h1 style={{ fontSize: "1.5rem", margin: 0 }}>CodeInsight</h1>
-        </div>
-        <div style={{ display: "flex", gap: "1rem" }}>
-          <button className="btn-secondary" onClick={() => setView("analytics")}>
-            📊 Analytics
-          </button>
-          <button className="btn-secondary" onClick={handleLogout} style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#fca5a5' }}>
-            Log Out
-          </button>
-        </div>
-      </header>
-      <QuestionList
-        onSelect={q => {
-          setSelectedQuestion(q);
-          setView("attempt");
-        }}
-      />
+    <div className="App">
+      {shouldShowHeader && (
+        <header className="glass-panel" style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "2rem",
+          padding: "1rem 2rem",
+          borderRadius: "16px"
+        }}>
+          <Link to="/" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none", color: "white" }}>
+            <span style={{ fontSize: "1.5rem" }}>🧠</span>
+            <h1 style={{ fontSize: "1.5rem", margin: 0, textDecoration: "none" }}>CodeInsight</h1>
+          </Link>
+
+          <div style={{ display: "flex", gap: "1rem" }}>
+            {token ? (
+              <>
+                <button className="btn-secondary" onClick={() => navigate("/questions")}>
+                  💻 Problems
+                </button>
+                <button className="btn-secondary" onClick={() => navigate("/analytics")}>
+                  📊 Analytics
+                </button>
+                <button className="btn-secondary" onClick={handleLogout} style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#fca5a5' }}>
+                  Log Out
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="btn-secondary" onClick={() => navigate("/login")}>
+                  Login
+                </button>
+                <button className="btn-primary" onClick={() => navigate("/signup")}>
+                  Register
+                </button>
+              </>
+            )}
+          </div>
+        </header>
+      )}
+
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        <Route path="/signup" element={<Register />} />
+
+        {/* Protected Routes - simple check, could be a wrapper */}
+        <Route path="/questions" element={token ? <QuestionList /> : <Login onLogin={handleLogin} />} />
+        <Route path="/questions/:id" element={token ? <QuestionAttempt /> : <Login onLogin={handleLogin} />} />
+        <Route path="/analytics" element={token ? <AnalyticsDashboard /> : <Login onLogin={handleLogin} />} />
+      </Routes>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
 
