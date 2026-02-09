@@ -17,6 +17,57 @@ async function submitCodeApi(data) {
   return res.json();
 }
 
+const MISCONCEPTION_DETAILS = {
+  "missing_return": {
+    "title": "Missing Return Statement",
+    "desc": "The function calculates a value but doesn't return it to the caller.",
+    "fix": "Ensure the function ends with a `return` keyword followed by the result.",
+    "example": "function sum(a,b) { \n  return a + b; // Correct \n}"
+  },
+  "off_by_one": {
+    "title": "Off-By-One Error",
+    "desc": "The loop iterates one too many or one too few times.",
+    "fix": "Check your loop condition. Use `< length` for zero-indexed arrays, not `<= length`.",
+    "example": "for (let i=0; i < arr.length; i++) { ... }"
+  },
+  "conditional_reasoning": {
+    "title": "Incorrect Check",
+    "desc": "You might be using assignment `=` instead of comparison `===` in an `if` statement.",
+    "fix": "Use `===` to compare values.",
+    "example": "if (x === 5) { ... }"
+  },
+  "array_method_misuse": {
+    "title": "Array Method Issue",
+    "desc": "You are using an array method like `map` or `filter` incorrectly (e.g., ignoring the return value).",
+    "fix": "Assign the result of `map/filter` to a variable, or use `forEach` if you don't need a new array.",
+    "example": "const doubled = arr.map(x => x * 2);"
+  },
+  "state_mutation": {
+    "title": "Unexpected Mutation",
+    "desc": "You are modifying the original array directly (e.g., with `sort` or `splice`), which can cause side effects.",
+    "fix": "Create a copy before modifying, e.g., `[...arr].sort(...)`.",
+    "example": "const sorted = [...arr].sort();"
+  },
+  "async_misuse": {
+    "title": "Async/Await Issue",
+    "desc": "You might be using `await` inside a loop, which runs requests sequentially instead of in parallel.",
+    "fix": "Use `Promise.all` to run multiple async tasks concurrently.",
+    "example": "await Promise.all(urls.map(fetch));"
+  },
+  "execution_order": {
+    "title": "Scope & Closure Issue",
+    "desc": "Defining functions inside loops (especially with `var`) can lead to unexpected behavior.",
+    "fix": "Use `let` instead of `var`, or move the function outside the loop.",
+    "example": "for (let i=0; i<n; i++) { ... }"
+  },
+  "trial_and_error": {
+    "title": "Trial & Error Pattern",
+    "desc": "It seems you are guessing the solution by making rapid changes.",
+    "fix": "Take a moment to plan your logic before coding.",
+    "example": "Write pseudo-code first!"
+  }
+};
+
 export default function QuestionAttempt({ question, onBack }) {
   const [code, setCode] = useState(question.starterCode || "");
   const [result, setResult] = useState(null);
@@ -114,35 +165,43 @@ export default function QuestionAttempt({ question, onBack }) {
                 borderColor: result.outcome === 'solved' ? 'var(--success)' : 'var(--warning)',
                 background: result.outcome === 'solved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)'
               }}>
-                <h4 style={{ margin: 0, color: result.outcome === 'solved' ? 'var(--success)' : 'var(--warning)' }}>
-                  {result.outcome === 'solved' ? '✅ SOLVED' : '⚠️ UNRESOLVED'}
-                </h4>
-                <p style={{ margin: "0.5rem 0 0", fontSize: "0.9rem" }}>
-                  {result.outcome === 'solved' ? "Great job! Your solution passed all tests validation." : "Tests failed or misconceptions detected."}
-                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  <span style={{ fontSize: "2rem" }}>{result.outcome === 'solved' ? '🎉' : '🤔'}</span>
+                  <div>
+                    <h4 style={{ margin: 0, color: result.outcome === 'solved' ? 'var(--success)' : 'var(--warning)', fontSize: "1.2rem" }}>
+                      {result.outcome === 'solved' ? 'Challenge Solved!' : 'Needs Improvement'}
+                    </h4>
+                    <p style={{ margin: "0.25rem 0 0", opacity: 0.9 }}>
+                      {result.outcome === 'solved' ? "Perfect! Your code passed all tests." : "Tests failed. Review the feedback below."}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Execution Errors */}
               {(result.executionErrors.syntax.length > 0 || result.executionErrors.runtime.length > 0 || result.executionErrors.testFailures.length > 0) && (
                 <div>
-                  <h4 style={{ color: "var(--error)" }}>Execution Issues</h4>
+                  <h4 style={{ color: "var(--error)", borderBottom: "1px solid var(--glass-border)", paddingBottom: "0.5rem" }}>⛔ Execution Issues</h4>
 
                   {result.executionErrors.syntax.map((err, i) => (
-                    <div key={i} style={{ padding: "0.75rem", background: "rgba(239, 68, 68, 0.1)", borderRadius: "var(--radius-sm)", marginBottom: "0.5rem", borderLeft: "4px solid var(--error)" }}>
-                      <strong>Syntax Error:</strong> {err}
+                    <div key={i} style={{ padding: "1rem", background: "rgba(239, 68, 68, 0.1)", borderRadius: "var(--radius-sm)", marginBottom: "0.5rem", borderLeft: "4px solid var(--error)" }}>
+                      <strong>Syntax Error:</strong>
+                      <div style={{ fontFamily: "monospace", marginTop: "0.5rem", whiteSpace: "pre-wrap" }}>{err}</div>
                     </div>
                   ))}
 
                   {result.executionErrors.runtime.map((err, i) => (
-                    <div key={i} style={{ padding: "0.75rem", background: "rgba(239, 68, 68, 0.1)", borderRadius: "var(--radius-sm)", marginBottom: "0.5rem", borderLeft: "4px solid var(--error)" }}>
-                      <strong>Runtime Error:</strong> {err}
+                    <div key={i} style={{ padding: "1rem", background: "rgba(239, 68, 68, 0.1)", borderRadius: "var(--radius-sm)", marginBottom: "0.5rem", borderLeft: "4px solid var(--error)" }}>
+                      <strong>Runtime Error:</strong>
+                      <div style={{ fontFamily: "monospace", marginTop: "0.5rem", whiteSpace: "pre-wrap" }}>{err}</div>
                     </div>
                   ))}
 
                   {result.executionErrors.testFailures.map((fail, i) => (
-                    <div key={i} style={{ padding: "0.75rem", background: "rgba(239, 68, 68, 0.1)", borderRadius: "var(--radius-sm)", marginBottom: "0.5rem", borderLeft: "4px solid var(--error)" }}>
-                      <div style={{ fontSize: "0.85rem", opacity: 0.8, fontFamily: "monospace" }}>{fail.test}</div>
-                      <div style={{ marginTop: "4px", fontWeight: "bold" }}>{fail.error}</div>
+                    <div key={i} style={{ padding: "1rem", background: "rgba(239, 68, 68, 0.1)", borderRadius: "var(--radius-sm)", marginBottom: "0.5rem", borderLeft: "4px solid var(--error)" }}>
+                      <div style={{ fontWeight: "bold", color: "#fca5a5", marginBottom: "0.25rem" }}>Test Failed:</div>
+                      <div style={{ fontFamily: "monospace", background: "rgba(0,0,0,0.3)", padding: "0.5rem", borderRadius: "4px" }}>{fail.test}</div>
+                      <div style={{ marginTop: "0.5rem", color: "white" }}>{fail.error}</div>
                     </div>
                   ))}
                 </div>
@@ -150,25 +209,41 @@ export default function QuestionAttempt({ question, onBack }) {
 
               {/* Misconceptions */}
               <div>
-                <h4 style={{ color: "var(--accent-secondary)" }}>Detected Patterns</h4>
+                <h4 style={{ color: "var(--accent-secondary)", borderBottom: "1px solid var(--glass-border)", paddingBottom: "0.5rem", marginTop: "1rem" }}>💡 Learning Insights</h4>
                 {result.detectedMisconceptions.length === 0 ? (
-                  <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>No specific misconception patterns identified.</p>
+                  <div style={{ padding: "1.5rem", textAlign: "center", color: "var(--text-secondary)", background: "rgba(255,255,255,0.02)", borderRadius: "var(--radius-sm)" }}>
+                    No specific anti-patterns detected. Focus on fixing the test failures!
+                  </div>
                 ) : (
-                  result.detectedMisconceptions.map((m, i) => (
-                    <div key={i} className="glass-card" style={{ marginBottom: "1rem", borderLeft: "4px solid var(--accent-secondary)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                        <h5 style={{ margin: 0, textTransform: "uppercase", fontSize: "0.85rem", letterSpacing: "0.05em", color: "var(--accent-secondary)" }}>
-                          {m.id.replace(/_/g, " ")}
-                        </h5>
-                        {m.confidence && (
-                          <span style={{ fontSize: "0.75rem", padding: "2px 6px", borderRadius: "4px", background: "rgba(255,255,255,0.1)" }}>
-                            {(m.confidence * 100).toFixed(0)}% Conf.
-                          </span>
-                        )}
+                  result.detectedMisconceptions.map((m, i) => {
+                    const details = MISCONCEPTION_DETAILS[m.id] || { title: m.id, desc: m.evidence, fix: "Check your logic." };
+                    return (
+                      <div key={i} className="glass-card" style={{ marginBottom: "1rem", borderLeft: "4px solid var(--accent-secondary)", background: "rgba(139, 92, 246, 0.1)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                          <h3 style={{ margin: 0, color: "white", fontSize: "1.1rem" }}>
+                            {details.title}
+                          </h3>
+                          {m.confidence && (
+                            <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "12px", background: "rgba(0,0,0,0.3)", color: "var(--accent-secondary)" }}>
+                              {Math.round(m.confidence * 100)}% Certainty
+                            </span>
+                          )}
+                        </div>
+
+                        <p style={{ margin: "0.75rem 0", color: "#e2e8f0" }}>{details.desc}</p>
+
+                        <div style={{ background: "rgba(0,0,0,0.2)", padding: "1rem", borderRadius: "8px", marginTop: "1rem" }}>
+                          <strong style={{ color: "var(--success)", display: "block", marginBottom: "0.5rem" }}>✓ How to fix:</strong>
+                          {details.fix}
+                          {details.example && (
+                            <div style={{ marginTop: "0.5rem", fontFamily: "monospace", color: "#94a3b8", fontSize: "0.9rem" }}>
+                              Example: {details.example}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <p style={{ margin: "0.5rem 0 0", fontSize: "0.9rem" }}>{m.evidence}</p>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
 

@@ -78,12 +78,26 @@ function App() {
 
   return (
     <div>
-      <header>
-        <h1>CodeInsight Dashboard</h1>
-        <button onClick={() => setView("analytics")}>
-          View Analytics
-        </button>
-        <button onClick={handleLogout} style={{ marginLeft: "10px" }}>Logout</button>
+      <header className="glass-panel" style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "2rem",
+        padding: "1rem 2rem",
+        borderRadius: "16px"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span style={{ fontSize: "1.5rem" }}>🧠</span>
+          <h1 style={{ fontSize: "1.5rem", margin: 0 }}>CodeInsight</h1>
+        </div>
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <button className="btn-secondary" onClick={() => setView("analytics")}>
+            📊 Analytics
+          </button>
+          <button className="btn-secondary" onClick={handleLogout} style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#fca5a5' }}>
+            Log Out
+          </button>
+        </div>
       </header>
       <QuestionList
         onSelect={q => {
