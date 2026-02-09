@@ -9,8 +9,13 @@ const router = express.Router();
  * Purpose: return aggregated learning analytics
  */
 router.get("/", authenticate, async (req, res) => {
-  const analytics = await getUserAnalytics(req.user.id);
-  res.json(analytics);
+  try {
+    const analytics = await getUserAnalytics(req.user.id);
+    res.json(analytics);
+  } catch (error) {
+    console.error("Error fetching analytics:", error);
+    res.status(500).json({ message: "Failed to fetch analytics", error: error.message });
+  }
 });
 
 export default router;
