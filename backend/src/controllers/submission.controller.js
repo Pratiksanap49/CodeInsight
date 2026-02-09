@@ -119,22 +119,27 @@ export async function submitCode(req, res, next) {
        9. Optional ML confidence
     ------------------------------ */
     let confidenceData = null;
-
-    confidenceData = await getConfidence(
-      { ...features, attemptNumber },
-      detectedMisconceptions
-    );
+    try {
+      confidenceData = await getConfidence(
+        { ...features, attemptNumber },
+        detectedMisconceptions
+      );
+    } catch (mlErr) {
+      console.warn("ML Service failed, proceeding without confidence scores:", mlErr.message);
+      confidenceData = [];
+    }
 
     const enrichedMisconceptions = detectedMisconceptions.map(m => {
-      const match = confidenceData?.find(c => c.id === m.id);
+      const match = Array.isArray(confidenceData) ? confidenceData.find(c => c.id === m.id) : null;
       return match
         ? { ...m, confidence: match.confidence }
-        : m;
+        : m; // Keep original if no ML data
     });
 
     /* -----------------------------
        10. Persist submission
     ------------------------------ */
+    console.log("Creating submission record...");
     const submission = await Submission.create({
       userId,
       questionId,
@@ -142,19 +147,20 @@ export async function submitCode(req, res, next) {
       code,
       timeSpent,
       executionErrors: {
-        syntax: testResults.syntax,
-        runtime: testResults.runtime,
-        testFailures: testResults.testFailures
+        syntax: testResults.syntax || [],
+        runtime: testResults.runtime || [], // Ensure arrays
+        testFailures: testResults.testFailures || []
       },
       features,
       detectedMisconceptions: enrichedMisconceptions,
       outcome
     });
+    console.log("Submission created:", submission._id);
 
     /* -----------------------------
-       9. Stable response
+       11. Response
     ------------------------------ */
-    return res.status(201).json({
+    res.status(201).json({
       submissionId: submission._id,
       attemptNumber,
       outcome,
@@ -162,6 +168,7 @@ export async function submitCode(req, res, next) {
       executionErrors: submission.executionErrors
     });
   } catch (err) {
-    next(err);
+    console.error("Submission Controller Error:", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
   }
 }

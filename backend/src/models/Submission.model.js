@@ -27,7 +27,12 @@ const SubmissionSchema = new mongoose.Schema(
     executionErrors: {
       syntax: [String],
       runtime: [String],
-      testFailures: [String]
+      testFailures: [
+        {
+          test: String,
+          error: String
+        }
+      ]
     },
     features: {
       type: Object, // raw extracted features
@@ -37,14 +42,15 @@ const SubmissionSchema = new mongoose.Schema(
       type: [
         {
           id: String,
-          evidence: String
+          evidence: String,
+          confidence: Number
         }
       ],
       required: true
     },
     outcome: {
       type: String,
-      enum: ["solved", "abandoned"],
+      enum: ["solved", "abandoned", "attempted"],
       required: true
     }
   },
