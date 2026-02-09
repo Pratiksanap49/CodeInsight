@@ -3,17 +3,24 @@ export default {
 
   detect(features) {
     return features.loops.some(loop => {
-      // Check for <= length
-      if (loop.testOperator === "<=" && /length/.test(loop.testRightSideAsString || "")) {
-        return true;
-      }
-      // Check for < length - 1 (or similar logic error skipping last element? actually < length - 1 skips last)
-      // BUT < length is correct.
-      // < length - 1 skips the last item. -> Off by one.
-      // <= length goes too far. -> Off by one.
+      const rightSide = loop.testRightSideAsString || "";
 
-      if (loop.testOperator === "<" && /length\s*-\s*1/.test(loop.testRightSideAsString || "")) {
-        return true;
+      // Case 1: <= length
+      // Common error: for (i=0; i <= arr.length; i++) -> unexpected undefined at end
+      // We want to flag `<= length` but allow `<= length - 1` (which is valid).
+      if (loop.testOperator === "<=") {
+        if (/length/.test(rightSide) && !/length\s*-\s*1/.test(rightSide)) {
+          return true;
+        }
+      }
+
+      // Case 2: < length - 1
+      // Common error: for (i=0; i < arr.length - 1; i++) -> skips last element
+      // This is usually an error if the intent is to iterate whole array.
+      if (loop.testOperator === "<") {
+        if (/length\s*-\s*1/.test(rightSide)) {
+          return true;
+        }
       }
 
       return false;

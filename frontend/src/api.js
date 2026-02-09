@@ -53,7 +53,7 @@ export async function submitCode(payload) {
 }
 
 export async function getAnalytics() {
-  const res = await fetch("http://localhost:5000/api/analytics", {
+  const res = await fetch(`${BASE_URL}/analytics`, {
     headers: getHeaders()
   });
   if (!res.ok) {
