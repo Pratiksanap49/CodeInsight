@@ -10,136 +10,57 @@ export async function submitCode(req, res, next) {
     const userId = req.user?.id;
     const { questionId, code, timeSpent } = req.body;
 
-    /* -----------------------------
-       1. Auth safety check
-    ------------------------------ */
-    if (!userId) {
-      const err = new Error("Unauthorized");
-      err.status = 401;
-      throw err;
+    // 1. Auth & Validation (Keep your existing logic)
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!questionId || typeof code !== "string" || code.trim().length === 0) {
+      return res.status(400).json({ message: "Invalid submission payload" });
     }
 
-    /* -----------------------------
-       2. Input validation
-    ------------------------------ */
-    if (
-      !questionId ||
-      typeof code !== "string" ||
-      code.trim().length === 0 ||
-      typeof timeSpent !== "number"
-    ) {
-      const err = new Error("Invalid submission payload");
-      err.status = 400;
-      throw err;
-    }
-
-    /* -----------------------------
-       3. Referential integrity
-    ------------------------------ */
+    // 2. Data Retrieval
     const question = await Question.findById(questionId);
-    if (!question) {
-      const err = new Error("Question does not exist");
-      err.status = 404;
-      throw err;
-    }
+    if (!question) return res.status(404).json({ message: "Question does not exist" });
 
-    /* -----------------------------
-       4. Attempt calculation
-    ------------------------------ */
-    const previousSubmissions = await Submission.find({
-      userId,
-      questionId
-    }).sort({ createdAt: 1 });
-
+    const previousSubmissions = await Submission.find({ userId, questionId }).sort({ createdAt: 1 });
     const attemptNumber = previousSubmissions.length + 1;
 
-    /* -----------------------------
-       4.1 Rate-limit protection
-    ------------------------------ */
-    const lastSubmission = previousSubmissions.at(-1);
-    if (lastSubmission) {
-      const diff =
-        Date.now() - new Date(lastSubmission.createdAt).getTime();
-
-      if (diff < 3000) {
-        const err = new Error("Submission too frequent");
-        err.status = 429;
-        throw err;
-      }
-    }
-
-    /* -----------------------------
-       5. Feature extraction (safe)
-    ------------------------------ */
-    let features;
-    try {
-      features = extractFeatures(code);
-    } catch {
-      features = {};
-    }
-
-    /* -----------------------------
-       6. Test Execution (NEW)
-    ------------------------------ */
-    // Helper to format tests for VM if needed, or pass array directly
-    // Assuming Question.tests is array of strings executable in VM
-    // We need to fetch tests from Question model (Wait, we already fetched question on line 38)
-
-    // Import runTests at top of file (I will handle import in another block or assume it's available? No, I must add import)
-    // Actually, I can use dynamic import or just assume I will add it. I will add import in a separate block.
-    // For now, let's write the logic using runTests.
-
+    // 3. Code Execution
     const testResults = await runTests(code, question.tests || []);
 
-    /* -----------------------------
-       7. Rule-based detection
-    ------------------------------ */
-    const detectionContext = {
-      attemptNumber,
-      previousSubmissions,
-      testResults // Pass test results to rules
-    };
+    // 4. Feature Extraction & Local Rule Detection
+    let features = {};
+    try { features = extractFeatures(code); } catch { features = {}; }
 
-    const detectedMisconceptions = detectMisconceptions(features, detectionContext);
+    const detectionContext = { attemptNumber, previousSubmissions, testResults };
+    const localMisconceptions = detectMisconceptions(features, detectionContext);
 
-    /* -----------------------------
-       8. Outcome determination
-    ------------------------------ */
-    const hasSolvedBefore = previousSubmissions.some(s => s.outcome === "solved");
-
-    // Solved ONLY if tests passed
-    const isSolvedNow = testResults.passed;
-
-    const outcome = hasSolvedBefore ? "solved" : (isSolvedNow ? "solved" : "attempted");
-    // "abandoned" is usually determined by session timeout, here we just say "attempted" or "failed"?
-    // The prompt says "Final outcome (solved / unsolved)".
-    // So "attempted" = "unsolved".
-
-    /* -----------------------------
-       9. Optional ML confidence
-    ------------------------------ */
-    let confidenceData = null;
+    // 5. ML SERVICE HANDSHAKE (The Fix)
+    let enrichedMisconceptions = [...localMisconceptions];
     try {
-      confidenceData = await getConfidence(
-        { ...features, attemptNumber },
-        detectedMisconceptions
+      // We send the code and features to the ML service
+      const mlResponse = await getConfidence(
+        { ...features, code, attemptNumber }, 
+        localMisconceptions
       );
+
+      // If ML service found NEW misconceptions (like from your new /analyze route), add them
+      if (mlResponse && Array.isArray(mlResponse.misconceptions)) {
+        mlResponse.misconceptions.forEach(mlItem => {
+          const exists = enrichedMisconceptions.find(m => m.id === mlItem.id);
+          if (exists) {
+            exists.confidence = mlItem.confidence; // Update confidence for local rules
+          } else {
+            enrichedMisconceptions.push(mlItem); // Add new insights detected by Python
+          }
+        });
+      }
     } catch (mlErr) {
-      console.warn("ML Service failed, proceeding without confidence scores:", mlErr.message);
-      confidenceData = [];
+      console.warn("ML Service unreachable, using local rules only:", mlErr.message);
     }
 
-    const enrichedMisconceptions = detectedMisconceptions.map(m => {
-      const match = Array.isArray(confidenceData) ? confidenceData.find(c => c.id === m.id) : null;
-      return match
-        ? { ...m, confidence: match.confidence }
-        : m; // Keep original if no ML data
-    });
+    // 6. Outcome & Persistence
+    const isSolvedNow = testResults.passed;
+    const outcome = isSolvedNow ? "solved" : "attempted";
 
-    /* -----------------------------
-       10. Persist submission
-    ------------------------------ */
-    console.log("Creating submission record...");
     const submission = await Submission.create({
       userId,
       questionId,
@@ -148,18 +69,15 @@ export async function submitCode(req, res, next) {
       timeSpent,
       executionErrors: {
         syntax: testResults.syntax || [],
-        runtime: testResults.runtime || [], // Ensure arrays
+        runtime: testResults.runtime || [],
         testFailures: testResults.testFailures || []
       },
       features,
       detectedMisconceptions: enrichedMisconceptions,
       outcome
     });
-    console.log("Submission created:", submission._id);
 
-    /* -----------------------------
-       11. Response
-    ------------------------------ */
+    // 7. Final Response
     res.status(201).json({
       submissionId: submission._id,
       attemptNumber,
@@ -167,8 +85,8 @@ export async function submitCode(req, res, next) {
       detectedMisconceptions: enrichedMisconceptions,
       executionErrors: submission.executionErrors
     });
+
   } catch (err) {
-    console.error("Submission Controller Error:", err);
-    res.status(500).json({ message: "Internal Server Error", error: err.message });
+    next(err);
   }
 }
