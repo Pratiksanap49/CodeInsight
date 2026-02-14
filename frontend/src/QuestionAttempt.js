@@ -6,7 +6,7 @@ import { useParams, useNavigate } from "react-router-dom";
 const API_URL = "http://localhost:5000/api";
 
 async function submitCodeApi(data) {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   const res = await fetch(`${API_URL}/submissions`, {
     method: "POST",
     headers: {
@@ -20,7 +20,7 @@ async function submitCodeApi(data) {
 }
 
 async function fetchQuestion(id) {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   const res = await fetch(`${API_URL}/questions/${id}`, {
     headers: { Authorization: `Bearer ${token}` }
   });

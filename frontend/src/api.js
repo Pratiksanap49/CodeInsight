@@ -1,7 +1,7 @@
 const BASE_URL = "http://localhost:5000/api";
 
 function getHeaders() {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   return {
     "Content-Type": "application/json",
     ...(token && { Authorization: `Bearer ${token}` })

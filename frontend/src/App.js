@@ -9,21 +9,21 @@ import Home from "./Home";
 import "./App.css";
 
 function AppContent() {
-  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [token, setToken] = useState(sessionStorage.getItem("token"));
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    const stored = localStorage.getItem("token");
+    const stored = sessionStorage.getItem("token");
     if (stored) setToken(stored);
   }, []);
 
   function handleLogin() {
-    setToken(localStorage.getItem("token"));
+    setToken(sessionStorage.getItem("token"));
   }
 
   function handleLogout() {
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
     setToken(null);
     navigate("/");
   }

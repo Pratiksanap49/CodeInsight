@@ -15,7 +15,7 @@ export default function Login({ onLogin }) { // onLogin prop is still useful for
         setError(null);
         try {
             const data = await login(email, password);
-            localStorage.setItem("token", data.token);
+            sessionStorage.setItem("token", data.token);
             if (onLogin) onLogin();
             navigate("/questions"); // Redirect to questions list
         } catch (err) {

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 export default function Home() {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     return (
         <div className="animate-fade-in" style={{
