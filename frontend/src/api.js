@@ -1,4 +1,7 @@
-const BASE_URL = process.env.REACT_APP_API_URL ? `${process.env.REACT_APP_API_URL}/api` : "http://localhost:5000/api";
+const BASE_URL = process.env.REACT_APP_API_URL 
+  ? `${process.env.REACT_APP_API_URL}/api` 
+  : "http://localhost:5000/api";
+
 function getHeaders() {
   const token = sessionStorage.getItem("token");
   return {
@@ -31,9 +34,7 @@ export async function getQuestions() {
   const res = await fetch(`${BASE_URL}/questions`, {
     headers: getHeaders()
   });
-  if (!res.ok) {
-    throw new Error("Failed to fetch questions");
-  }
+  if (!res.ok) throw new Error("Failed to fetch questions");
   return res.json();
 }
 
@@ -43,11 +44,7 @@ export async function submitCode(payload) {
     headers: getHeaders(),
     body: JSON.stringify(payload)
   });
-
-  if (!res.ok) {
-    throw new Error("Submission failed");
-  }
-
+  if (!res.ok) throw new Error("Submission failed");
   return res.json();
 }
 
@@ -55,8 +52,6 @@ export async function getAnalytics() {
   const res = await fetch(`${BASE_URL}/analytics`, {
     headers: getHeaders()
   });
-  if (!res.ok) {
-    throw new Error("Failed to fetch analytics");
-  }
+  if (!res.ok) throw new Error("Failed to fetch analytics");
   return res.json();
 }

@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-// We need to implement the API call logic. Assuming api.js exists and has submitCode.
-// But we need to update it to match the backend endpoint.
-const API_URL = "http://localhost:5000/api";
+const API_URL = process.env.REACT_APP_API_URL 
+  ? `${process.env.REACT_APP_API_URL}/api` 
+  : "http://localhost:5000/api";
 
 async function submitCodeApi(data) {
   const token = sessionStorage.getItem("token");
