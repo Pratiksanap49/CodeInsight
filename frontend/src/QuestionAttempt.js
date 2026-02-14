@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
+// 1. Dynamic API URL logic (Matches your api.js)
 const API_URL = process.env.REACT_APP_API_URL 
   ? `${process.env.REACT_APP_API_URL}/api` 
   : "http://localhost:5000/api";
 
+// 2. Updated API Helpers using the dynamic URL
 async function submitCodeApi(data) {
   const token = sessionStorage.getItem("token");
   const res = await fetch(`${API_URL}/submissions`, {
@@ -15,7 +17,7 @@ async function submitCodeApi(data) {
     },
     body: JSON.stringify(data)
   });
-  if (!res.ok) throw new Error("Failed to submit");
+  if (!res.ok) throw new Error("Failed to submit code");
   return res.json();
 }
 
@@ -27,7 +29,6 @@ async function fetchQuestion(id) {
   if (!res.ok) throw new Error("Failed to fetch question");
   return res.json();
 }
-
 const MISCONCEPTION_DETAILS = {
   "missing_return": {
     "title": "Missing Return Statement",
