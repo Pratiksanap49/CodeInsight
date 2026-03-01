@@ -1,5 +1,6 @@
 export default {
   id: "execution_order",
+  confidence: 0.90,
 
   detect(features) {
     return features.functions.some(fn => {

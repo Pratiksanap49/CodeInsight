@@ -1,5 +1,6 @@
 export default {
   id: "conditional_reasoning",
+  confidence: 0.85,
 
   detect(features) {
     return features.conditionals.some(cond => {

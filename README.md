@@ -16,9 +16,7 @@ Unlike LeetCode or HackerRank which only tell you *if* your code failed, CodeIns
 -   **AST-Based Analysis**: Parses code structure to find hidden logic errors that pass syntax checks but fail conceptually.
 
 ### 📊 Narrative Analytics Dashboard
--   **Diagnostic Story**: Tells a narrative about the user's learning journey (e.g., *"You persist in treating functions as procedures"*).
 -   **Misconception Profile**: Tracks specific bad habits over time with "Resolved" vs "Unresolved" status.
--   **Confidence Scoring**: Uses a Python/Scikit-Learn microservice to weigh the certainty of each diagnosis.
 
 ### 💎 Premium UI/UX
 -   **Glassmorphism Design**: Modern, dark-themed UI with frosted glass effects.
@@ -34,7 +32,6 @@ Unlike LeetCode or HackerRank which only tell you *if* your code failed, CodeIns
 | **Frontend** | React, React Router | Glassmorphic UI, State Management, API Integration |
 | **Backend** | Node.js, Express | REST API, AST Analysis (Acorn), Secure VM Test Runner |
 | **Database** | MongoDB | Stores User Profiles, Submissions, and Analytics |
-| **ML Service** | Python, FastAPI | Scikit-Learn model for confidence calibration |
 
 ---
 
@@ -45,7 +42,6 @@ graph TD
     Client[React Frontend] <-->|REST API| API[Node.js Backend]
     API <-->|Mongoose| DB[(MongoDB)]
     API -->|AST Analysis| Engine[Misconception Engine]
-    API <-->|HTTP| ML[Python ML Service]
     Engine --> Rules[Diagnostic Rules]
 ```
 
@@ -55,7 +51,6 @@ graph TD
 
 ### Prerequisites
 -   Node.js (v16+)
--   Python (v3.8+)
 -   MongoDB (Local or Atlas)
 
 ### 1. Clone the Repository
@@ -76,20 +71,7 @@ npm start
 ```
 *Server runs on `http://localhost:5000`*
 
-### 3. Setup ML Service
-```bash
-cd ml-service
-python -m venv venv
-# Windows:
-.\venv\Scripts\activate
-# Mac/Linux:
-# source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-*Service runs on `http://localhost:8000`*
-
-### 4. Setup Frontend
+### 3. Setup Frontend
 ```bash
 cd frontend
 npm install

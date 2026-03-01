@@ -2,7 +2,6 @@ import Submission from "../models/Submission.model.js";
 import Question from "../models/Question.model.js";
 import { extractFeatures } from "../services/featureExtractor.js";
 import { detectMisconceptions } from "../services/misconceptionEngine/index.js";
-import { getConfidence } from "../services/ml.client.js";
 import { runTests } from "../utils/testRunner.js";
 
 export async function submitCode(req, res, next) {
@@ -33,30 +32,6 @@ export async function submitCode(req, res, next) {
     const detectionContext = { attemptNumber, previousSubmissions, testResults };
     const localMisconceptions = detectMisconceptions(features, detectionContext);
 
-    // 5. ML SERVICE HANDSHAKE (The Fix)
-    let enrichedMisconceptions = [...localMisconceptions];
-    try {
-      // We send the code and features to the ML service
-      const mlResponse = await getConfidence(
-        { ...features, code, attemptNumber }, 
-        localMisconceptions
-      );
-
-      // If ML service found NEW misconceptions (like from your new /analyze route), add them
-      if (mlResponse && Array.isArray(mlResponse.misconceptions)) {
-        mlResponse.misconceptions.forEach(mlItem => {
-          const exists = enrichedMisconceptions.find(m => m.id === mlItem.id);
-          if (exists) {
-            exists.confidence = mlItem.confidence; // Update confidence for local rules
-          } else {
-            enrichedMisconceptions.push(mlItem); // Add new insights detected by Python
-          }
-        });
-      }
-    } catch (mlErr) {
-      console.warn("ML Service unreachable, using local rules only:", mlErr.message);
-    }
-
     // 6. Outcome & Persistence
     const isSolvedNow = testResults.passed;
     const outcome = isSolvedNow ? "solved" : "attempted";
@@ -73,7 +48,7 @@ export async function submitCode(req, res, next) {
         testFailures: testResults.testFailures || []
       },
       features,
-      detectedMisconceptions: enrichedMisconceptions,
+      detectedMisconceptions: localMisconceptions,
       outcome
     });
 
@@ -82,7 +57,7 @@ export async function submitCode(req, res, next) {
       submissionId: submission._id,
       attemptNumber,
       outcome,
-      detectedMisconceptions: enrichedMisconceptions,
+      detectedMisconceptions: localMisconceptions,
       executionErrors: submission.executionErrors
     });
 

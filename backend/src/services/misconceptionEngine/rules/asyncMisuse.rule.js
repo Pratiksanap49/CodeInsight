@@ -1,5 +1,6 @@
 export default {
   id: "async_misuse",
+  confidence: 0.90,
 
   detect(features) {
     // 1. Await inside a loop (serial execution instead of parallel)

@@ -1,5 +1,6 @@
 export default {
   id: "trial_and_error",
+  confidence: 0.75,
 
   detect(features, context = {}) {
     const { previousSubmissions = [] } = context;

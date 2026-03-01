@@ -1,5 +1,6 @@
 export default {
   id: "off_by_one",
+  confidence: 0.80,
 
   detect(features) {
     return features.loops.some(loop => {

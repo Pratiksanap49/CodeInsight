@@ -21,6 +21,7 @@ const RULES = [
 export function detectMisconceptions(features, context = {}) {
   return RULES.filter(rule => rule.detect(features, context)).map(rule => ({
     id: rule.id,
-    evidence: rule.evidence(features, context)
+    evidence: rule.evidence(features, context),
+    confidence: rule.confidence
   }));
 }

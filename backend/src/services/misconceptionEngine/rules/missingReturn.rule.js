@@ -1,5 +1,6 @@
 export default {
   id: "missing_return",
+  confidence: 0.95,
 
   detect(features) {
     // Check if any function has no return but is not void/constructor/async

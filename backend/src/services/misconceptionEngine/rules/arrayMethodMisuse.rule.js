@@ -1,5 +1,6 @@
 export default {
   id: "array_method_misuse",
+  confidence: 0.90,
 
   detect(features) {
     return features.arrayMethodCalls.some(call => {

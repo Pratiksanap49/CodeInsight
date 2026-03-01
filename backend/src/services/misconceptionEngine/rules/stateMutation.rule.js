@@ -1,5 +1,6 @@
 export default {
   id: "state_mutation",
+  confidence: 0.85,
 
   detect(features) {
     // Focus on methods that mutate in-place often unexpectedly: sort, reverse, splice.
